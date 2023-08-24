@@ -4,6 +4,12 @@ import com.github.senocak.domain.Package
 import com.github.senocak.exception.ServerException
 import com.github.senocak.repository.PackageRepository
 import com.github.senocak.util.OmaErrorMessageType
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.Bucket4j
+import io.github.bucket4j.Refill
+import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import net.jodah.expiringmap.ExpiringMap
@@ -22,23 +28,23 @@ class RateLimitingService(private val packageRepository: PackageRepository){
             log.info("Key Removed $key: ${rateLimitInfo.key} at ${rateLimitInfo.resetTime}") }
         .build<String, RateLimitInfo>()
 
-    //private val bucketCache: MutableMap<String, Bucket> = ConcurrentHashMap()
+    private val bucketCache: MutableMap<String, Bucket> = ConcurrentHashMap()
 
-    //fun resolveBucket(userId: String): Bucket =
-    //    bucketCache.computeIfAbsent("") { uId ->
-    //        val plan: Package = packageRepository.findById(uId)
-    //            .orElseThrow {
-    //                ServerException(
-    //                    omaErrorMessageType = OmaErrorMessageType.NOT_FOUND,
-    //                    variables = arrayOf(),
-    //                    statusCode = HttpStatus.NOT_FOUND
-    //                )
-    //            }
-    //        val limitPerHour: Long = plan.limitPer
-    //        Bucket4j.builder()
-    //            .addLimit(Bandwidth.classic(limitPerHour, Refill.intervally(limitPerHour, Duration.ofHours(1))))
-    //            .build()
-    //    }
+    fun resolveBucket(userId: String): Bucket =
+        bucketCache.computeIfAbsent("") { uId: String ->
+            val plan: Package = packageRepository.findById(uId)
+                .orElseThrow {
+                    ServerException(
+                        omaErrorMessageType = OmaErrorMessageType.NOT_FOUND,
+                        variables = arrayOf(),
+                        statusCode = HttpStatus.NOT_FOUND
+                    )
+                }
+            val limitPerHour: Long = plan.limitPer
+            Bucket4j.builder()
+                .addLimit(Bandwidth.classic(limitPerHour, Refill.intervally(limitPerHour, Duration.ofHours(1))))
+                .build()
+        }
 
     fun getRateLimitResponse(userId: String, packageId: String): RateLimitInfo {
         val key = "$userId+$packageId"
