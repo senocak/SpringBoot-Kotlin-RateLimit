@@ -1,0 +1,26 @@
+server:
+  port: ${SERVER_PORT:8080}
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+  datasource:
+    url: jdbc:postgresql://${SERVER_IP:localhost}:${POSTGRESQL_PORT:5432}/${POSTGRESQL_DB:rateLimit}?currentSchema=${POSTGRESQL_SCHEMA:public}
+    username: ${POSTGRESQL_USER:postgres}
+    password: ${POSTGRESQL_PASSWORD:senocak}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+  file:
+    name: ./logs/app.log
+app:
+  jwtSecret: JWTSuperSecretKey
+  jwtExpirationInMs: '#{60 * 50 * 1000}' # 50 minutes in milliseconds
+  refreshExpirationInMs: '#{24 * 60 * 60 * 1000}' # 24 hours in milliseconds
