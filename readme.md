@@ -67,3 +67,6 @@ Contributions to the Ratelimiting App are welcome! If you have bug fixes, improv
 
 ## License
 The Ratelimiting App is licensed under the MIT License.
+
+## TODO:
+1. Distributed: make application more effective by using redis or any other caching system and store the information there 
